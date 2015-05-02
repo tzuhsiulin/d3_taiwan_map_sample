@@ -1,0 +1,180 @@
+<html>  
+  <head>  
+        <title>Map</title>  
+  </head> 
+<style>
+
+</style>
+<body>
+
+<div id="map"></div>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+	function initContainerSize() {
+		var container = document.getElementById('map');
+
+		container.style.height = window.innerHeight + 'px';
+		container.style.width = window.innerWidth + 'px';
+	}
+
+	function displayMap(geojsonFile, countyID) {
+		var container = document.getElementById('map');
+		var width  = container.offsetWidth;
+		var height = container.offsetHeight;
+
+		d3.select('#map svg').remove();
+
+		// 產生出 SVG group
+		var svg = d3.select('#map').append('svg')
+			.attr('width', width)
+			.attr('height', height);
+		var taiwanMapGroup = svg.append('g');
+
+		// 設定投影模式
+		var projection = d3.geo.mercator()
+						.scale(7000) // 地圖放大比率
+						.center([120.9, 24.1]) // 指定地圖的中心點(longitude(經), latitude(緯))
+						.translate([width / 2, height / 2]); // 從中心點移動指定的px(x, y)
+
+		// 利用 d3.geo.path 將資料轉換成 SVG Path
+		var path = d3.geo.path().projection(projection);
+
+		d3.json(geojsonFile, function(err, taiwan) {
+			if (err) {
+				console.log(err);
+			}
+
+			if (geojsonFile == './geojson/twonship.json') {
+				for (var i = 0; i < taiwan.features.length; i++) {
+					if (taiwan.features[i].properties.County_ID != countyID) {
+						delete taiwan.features[i];
+					}
+				}
+				scaleMap(projection, countyID);
+			}
+
+			taiwanMapGroup.selectAll('path') // 選取所有 path 元素
+				.data(taiwan.features) // 設定所有 path 的內容
+				.enter()
+				.append('path')
+				.attr('fill', '#FFF') // 設定背景顏色
+				.attr("stroke", '#000') // 設定線斷顏色
+				.attr('stroke-width', 1) // 設定線斷粗細
+				.attr('d', path) // 設定線段
+				.on('mouseover', function(data, i) {
+					d3.select(this).attr('fill', 'yellow');
+				})
+				.on('mouseout', function(data, i) {
+					d3.select(this).attr('fill', '#FFF');
+				})
+				.on('mousedown', function(data, i) {
+					console.log(data.properties);
+					displayMap('./geojson/twonship.json', data.properties.County_ID);
+				}); 
+		});
+	}
+
+	function scaleMap(projection, countyID) {
+		var metadata = {
+			'10017': {
+				scale: 70000,
+				center: [121.7, 25.1]
+			},
+			'63': {
+				scale: 70000,
+				center: [121.5, 25.08]
+			},
+			'65': {
+				scale: 30000,
+				center: [121.5, 25.03]
+			},
+			'68': {
+				scale: 30000,
+				center: [121.2, 24.85]
+			},
+			'10004': {
+				scale: 30000,
+				center: [121.1, 24.68]
+			},
+			'10018': {
+				scale: 60000,
+				center: [120.9, 24.75]
+			},
+			'10005': {
+				scale: 35000,
+				center: [120.9, 24.55]
+			},
+			'66': {
+				scale: 30000,
+				center: [120.9, 24.28] 
+			},
+			'10007': {
+				scale: 35000,
+				center: [120.5, 24.0] 
+			},
+			'10009': {
+				scale: 35000,
+				center: [120.5, 23.7] 
+			},
+			'10010': {
+				scale: 35000,
+				center: [120.5, 23.4] 
+			},
+			'10020': {
+				scale: 50000,
+				center: [120.5, 23.5] 
+			},
+			'67': {
+				scale: 30000,
+				center: [120.4, 23.2] 
+			},
+			'64': {
+				scale: 20000,
+				center: [120.7, 23.0] 
+			},
+			'10013': {
+				scale: 20000,
+				center: [120.8, 22.5] 
+			},
+			'10014': {
+				scale: 15000,
+				center: [121.17, 22.7] 
+			},
+			'10015': {
+				scale: 15000,
+				center: [121.25, 23.7] 
+			},
+			'10002': {
+				scale: 30000,
+				center: [121.64, 24.64] 
+			},
+			'10008': {
+				scale: 20000,
+				center: [120.9, 23.8] 
+			},
+			'09020': {
+				scale: 50000,
+				center: [118.37, 24.5] 
+			},
+			'10016': {
+				scale: 50000,
+				center: [119.59, 23.48] 
+			},
+			'09007': {
+
+				scale: 50000,
+				center: [119.9, 26.15] 
+			}
+		};
+
+		projection.scale(metadata[countyID].scale).center(metadata[countyID].center);
+	}
+
+	initContainerSize();
+	displayMap('./geojson/country.json');
+</script>
+	
+</body>  
+</html>  
